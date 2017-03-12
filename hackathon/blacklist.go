@@ -38,8 +38,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		if len(args) < 3 {
 			return nil, errors.New("put operation must include three arguments, a key and value")
 		}
-		to := "QUERY-" + args[0]
-		from := args[1]
+		from := args[0]
+		to := "QUERY-" + args[1]
 		query := args[2]
 
 		err := stub.PutState(to, []byte(from+"-"+query))
@@ -49,7 +49,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		}
 		return nil, nil
 	case "putResult":
-		if len(args) < 2 {
+		if len(args) < 3 {
 			return nil, errors.New("put operation must include three arguments, a key and value")
 		}
 		from := "RESULT-" + args[0]
@@ -91,7 +91,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			return nil, errors.New("get operation must include one argument, a key")
 		}
 		key := args[0]
-		value, err := stub.GetState(key)
+		value, err := stub.GetState("QUERY-" + key)
 		if err != nil {
 			return nil, fmt.Errorf("get operation failed. Error accessing state: %s", err)
 		}
@@ -101,7 +101,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			return nil, errors.New("get operation must include one argument, a key")
 		}
 		key := args[0]
-		value, err := stub.GetState(key)
+		value, err := stub.GetState("RESULT-" + key)
 		if err != nil {
 			return nil, fmt.Errorf("get operation failed. Error accessing state: %s", err)
 		}
