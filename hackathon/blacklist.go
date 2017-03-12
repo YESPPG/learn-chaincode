@@ -34,20 +34,34 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	switch function {
-	case "put":
-		if len(args) < 2 {
-			return nil, errors.New("put operation must include two arguments, a key and value")
+	case "putQuery":
+		if len(args) < 3 {
+			return nil, errors.New("put operation must include three arguments, a key and value")
 		}
-		key := args[0]
-		value := args[1]
+		to := "QUERY-" + args[0]
+		from := args[1]
+		query := args[2]
 
-		err := stub.PutState(key, []byte(value))
+		err := stub.PutState(to, []byte(from+"-"+query))
 		if err != nil {
 			fmt.Printf("Error putting state %s", err)
 			return nil, fmt.Errorf("put operation failed. Error updating state: %s", err)
 		}
 		return nil, nil
+	case "putResult":
+		if len(args) < 2 {
+			return nil, errors.New("put operation must include three arguments, a key and value")
+		}
+		from := "RESULT-" + args[0]
+		to := args[1]
+		result := args[2]
 
+		err := stub.PutState(from, []byte(to+"-"+result))
+		if err != nil {
+			fmt.Printf("Error putting state %s", err)
+			return nil, fmt.Errorf("put operation failed. Error updating state: %s", err)
+		}
+		return nil, nil
 	case "remove":
 		if len(args) < 1 {
 			return nil, errors.New("remove operation must include one argument, a key")
@@ -72,7 +86,17 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 
 	switch function {
 
-	case "get":
+	case "getQuery":
+		if len(args) < 1 {
+			return nil, errors.New("get operation must include one argument, a key")
+		}
+		key := args[0]
+		value, err := stub.GetState(key)
+		if err != nil {
+			return nil, fmt.Errorf("get operation failed. Error accessing state: %s", err)
+		}
+		return value, nil
+	case "getResult":
 		if len(args) < 1 {
 			return nil, errors.New("get operation must include one argument, a key")
 		}
